@@ -14,7 +14,7 @@ The DMMF model is one of the variant of the widely used Morgan--Morgan--Finney s
 
 This \R implementation of the DMMF model is suitable for estimating surface runoff and sediment budgets of fields or catchments represented by raster.
 
-The package provides the \code{\link{DMMF}} function that estimates surface runoff and soil erosion using DMMF model, \code{\link{DMMF_Simple}} function which is the simpler version of the \code{\link{DMMF}} and \code{\link{SinkFill}} function that generates sink free map for the DMMF model based on the sink fill algorithm from Wang and Liu (2006) and the SAGA-GIS module of ``Module Fill Sinks (Wang \& Liu)'' by Volker Wichmann (2007).
+The package provides the \code{\link{DMMF}} function that estimates surface runoff and soil erosion using DMMF model, \code{\link{DMMF_Simple}} function which is the simpler version of the \code{\link{DMMF}} and \code{\link{SinkFill}} function that generates sink free map for the DMMF model based on the sink fill algorithm from Wang and Liu (2006) and the SAGA-GIS module of ``Module Fill Sinks (Wang & Liu)'' by Volker Wichmann (2007).
 }
 \author{
     Kwanghun Choi, Sebastian Arnhold, Bjoern Reineking
@@ -23,7 +23,7 @@ Maintainer: Kwanghun Choi (\email{kwanghun.choi@yahoo.com})
 }
 \references{
     Choi, K., Arnhold, S., Huwe, B., Reineking, B. (2017). 
-    Daily based Morgan--Morgan--Finney (DMMF) model: A spatially distributed conceptual soil erosion model to simulate complex soil surface configurations. \emph{Submitted to Water in Feb, 2017}. 
+    Daily based Morgan--Morgan--Finney (DMMF) model: A spatially distributed conceptual soil erosion model to simulate complex soil surface configurations. \emph{Water}, 9(4), 278. 
 
     Shin, S. S., Park, S. D., and Choi, B. K. (2016). 
     Universal power law for relationship between rainfall kinetic energy and rainfall intensity. \emph{Advances in Meteorology}, Article ID 2494681, 11 pages.
@@ -38,7 +38,7 @@ Maintainer: Kwanghun Choi (\email{kwanghun.choi@yahoo.com})
     A new triangular multiple flow direction algorithm for computing upslope areas from gridded digital elevation models. \emph{Water Resources Research}, 43(4):W04501. W04501.
 
     Volker Wichmann (2007). 
-    Module Fill Sinks (Wang \& Liu). SAGA-GIS Module Library Documentation (v2.1.3) [ cited 2015. 08. 15 ], Available from: \url{http://www.saga-gis.org/saga_tool_doc/2.1.3/ta_preprocessor_4.html}
+    Module Fill Sinks (Wang & Liu). SAGA-GIS Module Library Documentation (v2.1.3) [ cited 2015. 08. 15 ], Available from: \url{http://www.saga-gis.org/saga_tool_doc/2.1.3/ta_preprocessor_4.html}
 
     Wang, L. and Liu, H. (2006). 
     An efficient method for identifying and filling surface depressions in digital elevation models for hydrologic analysis and modelling. \emph{International Journal of Geographical Information Science}, 20(2):193--213.

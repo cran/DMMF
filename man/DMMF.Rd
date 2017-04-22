@@ -10,7 +10,7 @@ DMMF(DEM, R, RI, ET, P_c, P_z, P_s, theta_init, theta_sat, theta_fc,
      SD, K, P_I, n_s, CC, GC, IMP, PH, D, NV, d_a = 0.005, 
      DK_c = 0.1, DK_z = 0.5, DK_s = 0.3, 
      DR_c = 1.0, DR_z = 1.6, DR_s = 1.5, 
-     Breaking, Init_point, R_Type = 0, slpMode = 2, ALL = TRUE)
+     Breaking, Init_point, Sinks, R_Type = 0, slpMode = 2, ALL = TRUE)
 }
 \arguments{
     \item{DEM}{RasterLayer object of digital elevation model (DEM)}
@@ -42,6 +42,7 @@ DMMF(DEM, R, RI, ET, P_c, P_z, P_s, theta_init, theta_sat, theta_fc,
    \item{DR_s}{Numeric vector or RasterLayer object of detachability of sand particles by surface runoff (unit: g/mm)}
    \item{Breaking}{Numeric vector of starting points of each simulation period (0: during the period points, 1: breaking points), If \code{breaking} is missing, by default the first day is set to 1 and the other days are set to 0.}
    \item{Init_point}{Numeric vector of starting points of each rainfall event (0: during the period points, 1: breaking points), If \code{Init_point} is missing, \code{Init_point} is set to \code{Breaking} by default.}
+   \item{Sinks}{RasterLayer object of sinks (e.g., streams, reservoirs, and lakes) of sediments and surface runoff (optional).}
    \item{R_Type}{Integer object of each rainfall type for estimating kinetic energy of direct throughfall (DT) (0-8) (see details)}
    \item{slpMode}{Integer object of slope calculation algorithm (2: second order, 3: third order)}
    \item{ALL}{Logical object of selection for the entire output results}
@@ -92,7 +93,7 @@ DMMF(DEM, R, RI, ET, P_c, P_z, P_s, theta_init, theta_sat, theta_fc,
 }
 \references{
     Choi, K., Arnhold, S., Huwe, B., Reineking, B. (2017). 
-    Daily based Morgan--Morgan--Finney (DMMF) model: A spatially distributed conceptual soil erosion model to simulate complex soil surface configurations. \emph{Submitted to Water in Feb, 2017}. 
+    Daily based Morgan--Morgan--Finney (DMMF) model: A spatially distributed conceptual soil erosion model to simulate complex soil surface configurations. \emph{Water}, 9(4), 278. 
 
     Shin, S. S., Park, S. D., and Choi, B. K. (2016). 
     Universal power law for relationship between rainfall kinetic energy and rainfall intensity. \emph{Advances in Meteorology}, Article ID 2494681, 11 pages.
