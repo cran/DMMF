@@ -1,13 +1,11 @@
 ## News for Package `DMMF`
 
-#### Changes in DMMF version 0.3.2.0
-- Modify `SinkFill` and `DMMF` functions.
-- Add `Sinks` option to the `DMMF` function, which enables the function to consider sinks such as streams, and reservoirs. 
+#### Changes in DMMF version 0.4.0.1
+- Modifying codes using `isnan` from GCC function in accordance with fortran 95 standard.
+- Change in raster maps in `Potato.Convex` and `Potato.Concave` to have inMemory options.
 
 #### Changes in DMMF version 0.3.1.0
-- Modifying function ` for detect boundary, sink, and stand cells.
-- `B_checker` function is merged to the `MapChecker` function.
-- Modify the `SinkFill` algorithm and `BoundaryCheck` algorithm to work properly.
+- Modifying function `SinkFill` to create the sinkfilled map and the partition of the catchment. 
 
 #### Changes in DMMF version 0.3.0.0
 - Add function `MapChecker` for detect boundary, sink, and stand cells.

@@ -24,9 +24,10 @@ subroutine mapchecker(DEM, nr, nc, boundary, sink, stand)
     ! Create DEM with buffer cells with NaN
     DEM_b(1:nr, 1:nc) = DEM
     
-    forall (i=1:nr, j=1:nc, .not. isnan(DEM_b(i,j)) )
+    forall (i=1:nr, j=1:nc, DEM_b( i, j ) .eq. DEM_b( i, j ) )
         boundary(i, j) =&
-            dble( mod( count( isnan( DEM_b( i-1:i+1, j-1:j+1 ) ) ), 8 ) )
+            dble( mod( count( DEM_b( i-1:i+1, j-1:j+1 ) .ne.&
+            DEM_b( i-1:i+1, j-1:j+1 ) ), 8 ) )
         stand(i, j) =&
             dble( count( DEM_b(i-1:i+1, j-1:j+1) .lt. DEM(i, j) ) )
         sink(i, j) =&

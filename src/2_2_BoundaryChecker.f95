@@ -24,8 +24,9 @@ subroutine checkboundary(DEM, nr, nc, boundary)
     ! That condition is same as number of adjacent cells not having zero or eight NaNs.
     do i = 1, nr, 1
         do j = 1, nc, 1
-            if ( ( .not. isnan( buffer(i, j) ) ) .and. &
-                ( mod( count( isnan( buffer( i-1:i+1, j-1:j+1 ) ) ), 8 ) .gt. 0 ) ) then
+            if ( ( buffer( i, j ) .eq. buffer( i, j ) ) .and. &
+                ( mod( count( buffer( i-1:i+1, j-1:j+1 )& 
+                .ne. buffer( i-1:i+1, j-1:j+1 ) ), 8 ) .gt. 0 ) ) then
                 boundary(i, j) = 1.0d0
             else
                 boundary(i, j) = NaN

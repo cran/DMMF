@@ -193,8 +193,8 @@ b_DEM = NaN; b_DEM( 1:nr, 1:nc ) = DEM
 A = NaN; W = res
 do i = 1, vc
     max_loc = maxloc( DEM,& 
-        mask = ( ( .not. isnan( DEM ) )&
-        .and. isnan( sinks ) &
+        mask = ( ( DEM .eq. DEM )&
+        .and. ( sinks .ne. sinks ) &
         .and. ( mask .eq. 1 ) ) )
     row = max_loc( 1 ); col = max_loc( 2 )
     row_s( i ) = row; col_s( i ) = col
@@ -271,8 +271,14 @@ do j = 1, days
             SW_in = SW_init( row, col ) + IF_in_u
             !SW_in =  dmax1( SW_sat - SW_fc - IF_in_u, 0.0d0 )
             !SW_ex = dmax1( 0.0d0, SW_in - SW_sat )
-            SW_c( row, col ) = ( 1.0d0 - IMP( row, col, j ) ) *& 
-                ( SW_sat - SW_in )
+            ! Modified SW_c to make all exceed water be return flows.
+            if ( SW_sat - SW_in .ge. 0.0d0) then
+                SW_c( row, col ) = ( 1.0d0 - IMP( row, col, j ) ) *& 
+                    ( SW_sat - SW_in )
+            else
+                SW_c( row, col ) = SW_sat - SW_in
+            end if
+
             ! Runoff per unit area from the element 
             R_sum = Rf( row, col ) + Q_in_u
             ! Modified as erasing empirical term related to the slope
@@ -319,7 +325,8 @@ do j = 1, days
         ! Begin sediment loss calculation module
         ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             ! The ratiao of Erosion Protected Area ( EPA )
-            EPA = IMP( row, col, j ) + ( 1 - IMP( row, col, j ) ) * GC( row, col, j )
+            EPA = IMP( row, col, j ) +& 
+                ( 1.0d0 - IMP( row, col, j ) ) * GC( row, col, j )
             ! Detachment of soil particles by raindrop impact ( kg/m^2 )
             F_t = 0.001d0 * dmax1( 0.0d0, ( 1.0d0 - EPA ) ) *& 
                 KE( RI_0( row, col ), R_Type, Rf( row, col ),&

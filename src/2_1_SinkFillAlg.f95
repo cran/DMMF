@@ -35,10 +35,10 @@ subroutine sinkfill(DEM, nr, nc, res, boundary, min_angle, DEM_nosink, partition
     partition = NaN; t = 0
     where( boundary .lt. -99999 ) boundary = NaN
 
-    do while( any( ( .not. isnan( DEM_t ) ) .and. isnan( boundary ) ) )
+    do while( any( (  DEM_t .eq. DEM_t  ) .and. ( boundary .ne. boundary ) ) )
 
         min_loc = minloc( DEM_t, &
-            mask = ( boundary .eq. 1.0d0 ) .and. (.not. isnan( DEM_t ) ) )
+            mask = ( boundary .eq. 1.0d0 ) .and. ( DEM_t .eq. DEM_t ) )
         r = min_loc(1)
         c = min_loc(2)
 
@@ -47,15 +47,15 @@ subroutine sinkfill(DEM, nr, nc, res, boundary, min_angle, DEM_nosink, partition
         mnc = max0( 1, c - 1 )
         mxc = min0( nc, c + 1 )
 
-        if( isnan( partition(r, c) ) ) then
+        if( partition( r, c ) .ne. partition( r, c ) ) then
             t = t + 1
             partition( r, c ) = t
         end if
 
             do j = mnr, mxr
                 do k = mnc, mxc
-                    if ( isnan( boundary( j, k ) )&
-                        .and. (.not. isnan( DEM_t( j, k ) ) )&
+                    if ( ( boundary( j, k ) .ne. boundary( j, k ) )&
+                        .and. ( DEM_t( j, k ) .eq. DEM_t( j, k ) )&
                         ) then
                         boundary( j, k ) = 1.0d0
                         partition( j, k ) = partition( r, c ) 
@@ -73,10 +73,10 @@ subroutine sinkfill(DEM, nr, nc, res, boundary, min_angle, DEM_nosink, partition
             DEM_t(r, c) = NaN
     end do
 
-    do while ( any( ( boundary .eq. 1.0d0 ) .and. isnan( partition ) ) ) 
+    do while ( any( ( boundary .eq. 1.0d0 ) .and. ( partition .ne. partition ) ) ) 
 
         min_loc = minloc( DEM_nosink, &
-            mask = ( boundary .eq. 1.0d0 ) .and. ( isnan( partition ) ) )
+            mask = ( boundary .eq. 1.0d0 ) .and. ( partition .ne. partition ) )
         r = min_loc(1)
         c = min_loc(2)
 
@@ -85,8 +85,8 @@ subroutine sinkfill(DEM, nr, nc, res, boundary, min_angle, DEM_nosink, partition
         mnc = max0( 1, c - 1 )
         mxc = min0( nc, c + 1 )
 
-        if( isnan( partition( r, c ) )&
-            .and. ( .not. isnan( DEM_nosink( r, c ) ) ) ) then
+        if( ( partition( r, c ) .ne. partition( r, c ) )&
+            .and. ( DEM_nosink( r, c ) .eq. DEM_nosink( r, c ) ) ) then
 
             grad = 0.0d0; grad_max = 0.0d0; r_t = r; c_t = c
 
@@ -105,7 +105,7 @@ subroutine sinkfill(DEM, nr, nc, res, boundary, min_angle, DEM_nosink, partition
                 end do
             end do
 
-            if( (.not. isnan( partition( r_t, c_t ) ) )& 
+            if( ( partition( r_t, c_t ) .eq. partition( r_t, c_t ) )& 
                 .and. ( grad_max .gt. 0.0d0 ) ) then
                 partition( r, c ) = partition( r_t, c_t )
             else
