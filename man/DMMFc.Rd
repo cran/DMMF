@@ -1,16 +1,14 @@
-\name{DMMF}
-\alias{DMMF}
+\name{DMMFc}
+\alias{DMMFc}
 \title{Daily based Morgan--Morgan--Finney (DMMF) soil erosion model}
 \concept{soil erosion model}
 \description{
     Estimating surface runoff and sediment budget using the Daily based Morgan--Morgan--Finney soil erosion model using the algorithm from Choi et al. (2017)
 }
 \usage{
-DMMF(DEM, R, RI, ET, P_c, P_z, P_s, theta_init, theta_sat, theta_fc, 
-     SD, K, P_I, n_s, CC, GC, IMP, PH, D, NV, d_a = 0.005, 
-     DK_c = 0.1, DK_z = 0.5, DK_s = 0.3, 
-     DR_c = 1.0, DR_z = 1.6, DR_s = 1.5, 
-     Breaking, Init_point, Sinks, R_Type = 0, slpMode = 2, ALL = TRUE)
+DMMFc(DEM, R, RI, ET, P_c, P_z, P_s, theta_init, theta_sat, theta_fc, SD, K, 
+      P_I, n_s, CC, GC, IMP, PH, D, NV, d_a, DK_c, DK_z, DK_s, DR_c, DR_z, DR_s, 
+      SoilMap, LULCMap, Breaking, Init_point, Sinks, R_Type = 0, slpMode = 2, ALL = TRUE)
 }
 \arguments{
     \item{DEM}{RasterLayer object of digital elevation model (DEM)}
@@ -40,6 +38,8 @@ DMMF(DEM, R, RI, ET, P_c, P_z, P_s, theta_init, theta_sat, theta_fc,
    \item{DR_c}{Numeric vector or RasterLayer object of detachability of clay particles by surface runoff (unit: g/mm)}
    \item{DR_z}{Numeric vector or RasterLayer object of detachability of silt particles by surface runoff (unit: g/mm)}
    \item{DR_s}{Numeric vector or RasterLayer object of detachability of sand particles by surface runoff (unit: g/mm)}
+   \item{SoilMap}{Categorical raster map for soil characteristics}
+   \item{LULCMap}{Categorical raster map for Land use and vegetation types}
    \item{Breaking}{Numeric vector of starting points of each simulation period (0: during the period points, 1: breaking points), If \code{breaking} is missing, by default the first day is set to 1 and the other days are set to 0.}
    \item{Init_point}{Numeric vector of starting points of each rainfall event (0: during the period points, 1: breaking points), If \code{Init_point} is missing, \code{Init_point} is set to \code{Breaking} by default.}
    \item{Sinks}{RasterLayer object of sinks (e.g., streams, reservoirs, and lakes) of sediments and surface runoff (optional).}
@@ -112,34 +112,9 @@ DMMF(DEM, R, RI, ET, P_c, P_z, P_s, theta_init, theta_sat, theta_fc,
 }
 \examples{
 \dontrun{
-## Load example data for test running DMMF model
-data(Potato.Convex)
-attach(Potato.Convex)
-## Run DMMF function using Potato.Convex data
-Result <- DMMF(DEM = s.map$DEM, R = d.var$R, RI = d.var$RI, ET = d.var$ET, 
-               P_c = s.var$P_c, P_z = s.var$P_z, P_s = s.var$P_s, 
-               theta_init = d.map$theta_init, theta_sat = s.var$theta_sat, 
-               theta_fc = s.var$theta_fc,
-               SD = s.var$SD, K = s.var$K, P_I = s.var$P_I, n_s = s.map$n_s, 
-               CC = d.var$CC, GC = s.var$GC, IMP = s.map$IMP, PH = d.var$PH, 
-               D = s.var$D, NV = s.var$NV, d_a = s.var$d_a,
-               DK_c = s.var$DK_c, DK_z = s.var$DK_z, DK_s = s.var$DK_s, 
-               DR_c = s.var$DR_c, DR_z = s.var$DR_z, DR_s = s.var$DR_s, 
-               Breaking = d.var$Breaking, Init_point = d.var$Init_point, 
-               R_Type = 0, slpMode = 2, ALL = TRUE)
-## Check results
-## 1-a. Total volume of runoff generated from each element
-plot(Result$Q_out)
-## 1-b. Total volume of runoff per unit surface area generated from each element
-plot(Result$Q_out/Result$A)
-
-## 2-a. Total mass of eroded soil from each element
-plot(Result$SL_out)
-## 2-a. Total mass of eroded soil per unit surface area from each element
-plot(Result$SL_out/Result$A)
+## Datasets for DMMFc will be uploaded.
 }
 }
 \seealso{
-    \code{\link{DMMF_Simple}} for one element during a day.
-    \code{\link{Potato.Convex}} for the description of the data.
+    \code{\link{DMMF}} for general use of the algorithm.
 }

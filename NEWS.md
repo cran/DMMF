@@ -1,5 +1,14 @@
 ## News for Package `DMMF`
 
+#### Changes in DMMF version 0.5.0.2
+- Modifying SinkFill algorithm to give correct results.
+
+#### Changes in DMMF version 0.5.0.1
+- From the bug reporting from Mohammad Fereshtehpour, we modified codes to compare xres and yres of DEM from "xres(DEM) == yres(DEM)" to "all.equal(xres(DEM), yres(DEM))".
+
+#### Changes in DMMF version 0.4.5.1
+- Add function `DMMFc` which is useful when input maps are categorical.
+
 #### Changes in DMMF version 0.4.0.1
 - Modifying codes using `isnan` from GCC function in accordance with fortran 95 standard.
 - Change in raster maps in `Potato.Convex` and `Potato.Concave` to have inMemory options.

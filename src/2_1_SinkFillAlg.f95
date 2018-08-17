@@ -21,9 +21,12 @@ subroutine sinkfill(DEM, nr, nc, res, boundary, min_angle, DEM_nosink, partition
     ! The "boundary" is the boundary of the DEM"
     ! The "DEM_nosink" is the sink filled DEM.
     double precision, dimension( nr, nc ) :: DEM, DEM_t, boundary, DEM_nosink, partition
+    ! min_diff matrix
+    double precision, dimension( -1:1, -1:1 ) :: min_diff, min_block
+    double precision, dimension( -1:1, -1:1 ) :: bnd_block, prt_block, DEM_block, out_block
     ! Dummy variables and the minimum and maximum row and column number.
     integer :: j, k, r, c, mnr, mxr, mnc, mxc, t, r_t, c_t 
-    double precision :: grad, grad_max
+    double precision :: mda, mdd, grad, grad_max
     ! Variables of locations for maximum value and minumum value.
     integer, dimension(2) :: min_loc
     ! Parameters for the NaN value.
@@ -35,85 +38,50 @@ subroutine sinkfill(DEM, nr, nc, res, boundary, min_angle, DEM_nosink, partition
     partition = NaN; t = 0
     where( boundary .lt. -99999 ) boundary = NaN
 
-    do while( any( (  DEM_t .eq. DEM_t  ) .and. ( boundary .ne. boundary ) ) )
+    mda = res * dtan(min_angle)               ! min difference for adjoining cells
+    mdd = res * dtan(min_angle) * sqrt(2.0d0) ! min difference at diagonal cells  
+    min_diff = reshape((/ mdd, mda, mdd, mda, 0.0d0, mda, mdd, mda, mdd /), shape(min_diff)) 
 
-        min_loc = minloc( DEM_t, &
-            mask = ( boundary .eq. 1.0d0 ) .and. ( DEM_t .eq. DEM_t ) )
+    do while( any( boundary .eq. boundary ) )
+
+        min_loc = minloc( DEM_t, mask = ( boundary .eq. boundary ) )
         r = min_loc(1)
         c = min_loc(2)
-
-        mnr = max0( 1, r - 1 )
-        mxr = min0( nr, r + 1 )
-        mnc = max0( 1, c - 1 )
-        mxc = min0( nc, c + 1 )
-
+        ! Assing partition if the target cell doesn't have it.
         if( partition( r, c ) .ne. partition( r, c ) ) then
             t = t + 1
             partition( r, c ) = t
         end if
-
-            do j = mnr, mxr
-                do k = mnc, mxc
-                    if ( ( boundary( j, k ) .ne. boundary( j, k ) )&
-                        .and. ( DEM_t( j, k ) .eq. DEM_t( j, k ) )&
-                        ) then
-                        boundary( j, k ) = 1.0d0
-                        partition( j, k ) = partition( r, c ) 
-                        if ( ( DEM_t( j, k ) .le. DEM_t(r, c) )& 
-                            .and. ( (j .ne. r) .or. (k .ne. c) )& 
-                            ) then
-                            DEM_t( j, k ) = DEM_t( r, c ) +&
-                                res * dtan(min_angle)&
-                                * dsqrt( dble( (j - r)**2.0d0 + (k - c)**2.0d0 ) )
-                            DEM_nosink(j, k) = DEM_t(j, k)
-                        end if
-                    end if
-                end do
-            end do
-            DEM_t(r, c) = NaN
-    end do
-
-    do while ( any( ( boundary .eq. 1.0d0 ) .and. ( partition .ne. partition ) ) ) 
-
-        min_loc = minloc( DEM_nosink, &
-            mask = ( boundary .eq. 1.0d0 ) .and. ( partition .ne. partition ) )
-        r = min_loc(1)
-        c = min_loc(2)
-
+        ! Check the location of target cell and its surrounding cells.
         mnr = max0( 1, r - 1 )
         mxr = min0( nr, r + 1 )
         mnc = max0( 1, c - 1 )
         mxc = min0( nc, c + 1 )
+        ! Initialized blocks and assign values from original maps.
+        ! Initialization
+        min_block = NaN; bnd_block = NaN; prt_block = NaN; DEM_block = NaN
+        ! Assign values
+        bnd_block( (mnr-r):(mxr-r), (mnc-c):(mxc-c) ) = boundary( mnr:mxr, mnc:mxc )
+        prt_block( (mnr-r):(mxr-r), (mnc-c):(mxc-c) ) = partition( mnr:mxr, mnc:mxc )
+        DEM_block( (mnr-r):(mxr-r), (mnc-c):(mxc-c) ) = DEM_t( mnr:mxr, mnc:mxc )
+        out_block( (mnr-r):(mxr-r), (mnc-c):(mxc-c) ) = DEM_nosink( mnr:mxr, mnc:mxc )
+        min_block( (mnr-r):(mxr-r), (mnc-c):(mxc-c) ) = &
+            DEM_t( r, c ) + min_diff( (mnr-r):(mxr-r), (mnc-c):(mxc-c) )
+        ! Assign new boundary and perform sink fill algorithm
+        where( (DEM_block .eq. DEM_block) .and. (DEM_block .le. min_block)&
+                .and. (bnd_block .ne. bnd_block) ) DEM_block = min_block
+        where( prt_block .ne. prt_block ) prt_block = partition( r, c )
+        where( DEM_block .eq. DEM_block ) 
+            bnd_block = 1.0d0
+            out_block = DEM_block
+        end where
 
-        if( ( partition( r, c ) .ne. partition( r, c ) )&
-            .and. ( DEM_nosink( r, c ) .eq. DEM_nosink( r, c ) ) ) then
-
-            grad = 0.0d0; grad_max = 0.0d0; r_t = r; c_t = c
-
-            do j = mnr, mxr
-                do k = mnr, mxr
-                    if ( ( DEM_nosink( r, c ) .gt. DEM_nosink( j, k ) )&
-                        .and. (j .ne. r) .or. (k .ne. c) ) then
-                        grad = ( DEM_nosink( r, c ) - DEM_nosink( j, k ) )& 
-                            / dsqrt( dble( (r - j)**2.0d0 + (c - k)**2.0d0 ) )
-                        if( grad .gt. grad_max ) then
-                            grad_max = grad
-                            r_t = j
-                            c_t = k
-                        end if
-                    end if
-                end do
-            end do
-
-            if( ( partition( r_t, c_t ) .eq. partition( r_t, c_t ) )& 
-                .and. ( grad_max .gt. 0.0d0 ) ) then
-                partition( r, c ) = partition( r_t, c_t )
-            else
-                t = t + 1
-                partition( r, c ) = t
-            end if
-
-        end if
+        DEM_t( mnr:mxr, mnc:mxc )       = DEM_block( (mnr-r):(mxr-r), (mnc-c):(mxc-c) )
+        DEM_nosink( mnr:mxr, mnc:mxc )  = out_block( (mnr-r):(mxr-r), (mnc-c):(mxc-c) )
+        DEM_t( r, c ) = NaN
+        boundary( mnr:mxr, mnc:mxc )    = bnd_block( (mnr-r):(mxr-r), (mnc-c):(mxc-c) )
+        boundary( r, c ) = NaN
+        partition( mnr:mxr, mnc:mxc )   = prt_block( (mnr-r):(mxr-r), (mnc-c):(mxc-c) )
     end do
 end subroutine sinkfill
 

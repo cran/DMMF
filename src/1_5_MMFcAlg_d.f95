@@ -1,8 +1,9 @@
-subroutine DMMF( DEM, nr, nc, res, option, days, R, RI, R_Type, ET,&
+subroutine DMMFc( DEM, SoilMap, LULCMap, nr, nc, res, option, days,& 
+        R, RI, R_Type, ET,&
         P_c, P_z, P_s, theta_init, theta_sat, theta_fc, SD, K,& 
         P_I, n_s, d_a, CC, GC, IMP, PH, D, NV,&
         DK_c, DK_z, DK_s, DR_c, DR_z, DR_s,&
-        Breaking, N_out, vc, Init_point, sinks,&
+        Breaking, N_out, vc, Init_days, Init_point, sinks,&
         A, Rf_r, SW_c_r, theta_r_r, TC_r,&
         Q_in_r, Q_out_r, IF_in_r, IF_out_r,& 
         SS_c_r, SS_z_r, SS_s_r, G_c_r, G_z_r, G_s_r,&
@@ -37,7 +38,7 @@ subroutine DMMF( DEM, nr, nc, res, option, days, R, RI, R_Type, ET,&
     ! nc: the number of columns of the input rasters    
     ! option: option for the slope algorithm ( see slope function above )
     ! R_Type: the type of a climate region ( integer )
-    integer, intent( in ) :: nr, nc, option, days, R_Type, N_out, vc
+    integer, intent( in ) :: nr, nc, option, days, R_Type, N_out, vc, Init_days
     ! res: the resolution of the input rasters.
     double precision, intent( in ) :: res
     ! DEM: Digital elevation model ( raster )
@@ -67,12 +68,27 @@ subroutine DMMF( DEM, nr, nc, res, option, days, R, RI, R_Type, ET,&
     ! d_a: rill depth for the real surface condition
     integer, dimension( days ) :: Breaking, Init_point
     double precision, dimension( nr, nc ) :: DEM, sinks
-    double precision, dimension( nr, nc, days ) :: R, RI, ET
-    double precision, dimension( nr, nc ) :: P_c, P_z, P_s,& 
-        theta_sat, theta_fc, SD, K
-    double precision, dimension( nr, nc, days ) :: P_I, n_s, d_a
-    double precision, dimension( nr, nc, days ) :: CC, GC, IMP, PH, D, NV 
-    double precision, dimension( nr, nc ) :: DK_c, DK_z, DK_s, DR_c, DR_z, DR_s
+    double precision, dimension( nr, nc ), intent( in ) :: SoilMap, LULCMap
+    double precision, dimension( nr, nc, days ) :: ET
+    double precision, dimension( nr, nc, days ) :: R, RI
+    double precision, dimension( 6 ) :: P_c, P_z, P_s
+    double precision, dimension( 6 ) :: theta_sat, theta_fc, SD, K
+    double precision, dimension( 6 ) :: DK_c, DK_z, DK_s
+    double precision, dimension( 6 ) :: DR_c, DR_z, DR_s
+    double precision, dimension( 6, Init_days ) :: theta_init
+    double precision, dimension( 14, days ) :: P_I, n_s, d_a
+    double precision, dimension( 14, days ) :: CC, GC, IMP, PH, D, NV 
+
+    ! These are the maps to be used in the model    
+    double precision, dimension( nr, nc ) :: P_c_m, P_z_m, P_s_m
+    double precision, dimension( nr, nc ) :: theta_init_m, theta_sat_m
+    double precision, dimension( nr, nc ) :: theta_fc_m, SD_m, K_m
+    double precision, dimension( nr, nc ) :: DK_c_m, DK_z_m, DK_s_m
+    double precision, dimension( nr, nc ) :: DR_c_m, DR_z_m, DR_s_m
+    double precision, dimension( nr, nc ) :: P_I_m, n_s_m, d_a_m
+    double precision, dimension( nr, nc ) :: CC_m, GC_m, IMP_m 
+    double precision, dimension( nr, nc ) :: PH_m, D_m, NV_m 
+
     ! These are the outputs
     ! Q: the volume of runoff generated on the element per unit surface area ( mm )
     ! Q_in: the total volume of runoff flows in to the element ( mm * m^2 )
@@ -105,8 +121,9 @@ subroutine DMMF( DEM, nr, nc, res, option, days, R, RI, R_Type, ET,&
     ! SW_in: Soil water existing or flowing in prior to runoff process (mm)
     ! SW_ex: Soil water exceed maximum soil water storage capacity of the element (mm)
     ! SW: Average daily reserved water in the vadose zone (mm)
-    double precision, dimension( nr, nc ) :: R_0, RI_0, Rf, ET_0, SW_init
+    double precision, dimension( nr, nc ) :: Rf, ET_0, SW_init
     double precision, dimension( nr, nc ) :: A
+    double precision, dimension( nr, nc ) :: R_0, RI_0
     double precision :: S, W, R_sum,&
         SW_sat, SW_fc, SW_in, SW, SW_t
     !, SW_ex
@@ -162,13 +179,11 @@ subroutine DMMF( DEM, nr, nc, res, option, days, R, RI, R_Type, ET,&
     ! col: current calculation col number.
     integer :: row, col
     ! i: dummy variable for the loop.
-    integer :: i, j, t, init_counter
+    integer :: i, j, LULC_Type, t, init_counter
     ! Parameters
     double precision, parameter :: NaN = transfer(z'7ff8000000000000', 1.0d0)
     double precision, parameter :: pi = 3.141592653589793239d0
     double precision, parameter :: g = 9.80665d0
-    ! Input of initial soil water content of whole soil profile
-    double precision, dimension( nr, nc, N_out ) :: theta_init
     ! declaration and initialization of result matrix
     double precision, dimension( nr, nc, N_out ) :: Rf_r,& 
         SW_c_r, theta_r_r, TC_r,&
@@ -185,6 +200,30 @@ where( sinks .lt. -99999 ) sinks = NaN
 where( sinks .ge. -99999 ) sinks = 1.0d0
 mask = 1
 
+! SoilMaps preprocessing
+P_c_m = NaN; P_z_m = NaN; P_s_m = NaN
+theta_sat_m = NaN; theta_fc_m = NaN 
+SD_m = NaN; K_m = NaN
+DK_c_m = NaN; DK_z_m = NaN; DK_s_m = NaN
+DR_c_m = NaN; DR_z_m = NaN; DR_s_m = NaN
+do i = 1, 6 
+    where( IDNINT(SoilMap) .eq. i ) 
+        P_c_m = P_c( i )
+        P_z_m = P_z( i )
+        P_s_m = P_s( i )
+        theta_sat_m = theta_sat( i )
+        theta_fc_m = theta_fc( i )
+        SD_m = SD( i )
+        K_m = K( i )
+        DK_c_m = DK_c( i )
+        DK_z_m = DK_z( i )
+        DK_s_m = DK_s( i )
+        DR_c_m = DR_c( i )
+        DR_z_m = DR_z( i )
+        DR_s_m = DR_s( i )
+    end where
+end do
+
 ! Initialize b_DEM using DEM and make buffers as NaN.
 b_DEM = NaN; b_DEM( 1:nr, 1:nc ) = DEM
 ! Initialize the area and the width of elements (cells)
@@ -193,8 +232,8 @@ b_DEM = NaN; b_DEM( 1:nr, 1:nc ) = DEM
 A = NaN; W = res
 do i = 1, vc
     max_loc = maxloc( DEM,& 
-        mask = ( ( DEM .eq. DEM )&
-        .and. ( sinks .ne. sinks ) &
+        mask = ( ( .not. isnan( DEM ) )&
+        .and. isnan( sinks ) &
         .and. ( mask .eq. 1 ) ) )
     row = max_loc( 1 ); col = max_loc( 2 )
     row_s( i ) = row; col_s( i ) = col
@@ -221,12 +260,35 @@ SL_c_out_r = 0.0d0; SL_z_out_r = 0.0d0; SL_s_out_r = 0.0d0; SL_out_r = 0.0d0
 
 t = 1
 init_counter = 1
-SW_init = 1000.0d0 * theta_init( 1:nr, 1:nc, init_counter ) * SD
+do i = 1, 6 
+    where( IDNINT( SoilMap ) .eq. i ) 
+        theta_init_m = theta_init(i, init_counter)
+    end where
+end do
+
+SW_init = 1000.0d0 * theta_init_m * SD_m
 
 do j = 1, days
     R_0 = R( 1:nr, 1:nc, j )
     RI_0 = RI( 1:nr, 1:nc, j )
     ET_0 = ET( 1:nr, 1:nc, j )
+
+    P_I_m = NaN; n_s_m = NaN; d_a_m = NaN
+    CC_m = NaN; GC_m = NaN; IMP_m = NaN
+    PH_m = NaN; D_m = NaN; NV_m = NaN
+    do LULC_Type = 1, 14
+        where( IDNINT( LULCMap ) .eq. LULC_Type ) 
+            P_I_m = P_I( LULC_Type, j )
+            n_s_m = n_s( LULC_Type, j )
+            d_a_m = d_a( LULC_Type, j )
+            CC_m  = CC( LULC_Type, j )
+            GC_m  = GC( LULC_Type, j )
+            IMP_m = IMP( LULC_Type, j )
+            PH_m  = PH( LULC_Type, j )
+            D_m   = D( LULC_Type, j )
+            NV_m  = NV( LULC_Type, j )
+        end where
+    end do
 
     ! Matrix initialization
     Rf = NaN
@@ -257,7 +319,7 @@ do j = 1, days
         ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             ! R_0 is the rainfall of rain day.
             ! Rf is modified from Original version ( / cos( S ) -> * cos( S ) ).
-            Rf( row, col ) = R_0( row, col ) * ( 1.0d0 - P_I( row, col, j ) ) * dcos( S )
+            Rf( row, col ) = R_0( row, col ) * ( 1.0d0 - P_I_m( row, col ) ) * dcos( S )
             ! the amount of the runoff and the interflow on unit surface area 
             ! from other elements.
             Q_in_u = Q_in( row, col ) / A( row, col )
@@ -266,17 +328,16 @@ do j = 1, days
             ! Modified
             ! To modify model for shorter term, it is better to use MOD16ET.
             ! SW_c: the infiltrable soil water storage capacity of the element ( mm )
-            SW_sat = 1000.0d0 * theta_sat( row, col ) * SD( row, col )
-            SW_fc = 1000.0d0 * theta_fc( row, col ) * SD( row, col ) 
+            SW_sat = 1000.0d0 * theta_sat_m( row, col ) * SD_m( row, col )
+            SW_fc = 1000.0d0 * theta_fc_m( row, col ) * SD_m( row, col ) 
             SW_in = SW_init( row, col ) + IF_in_u
             !SW_in =  dmax1( SW_sat - SW_fc - IF_in_u, 0.0d0 )
             !SW_ex = dmax1( 0.0d0, SW_in - SW_sat )
-            ! Modified SW_c to make all exceed water be return flows.
+            ! Modified SW_c to make all exceed water be return flows. 
             if ( SW_sat - SW_in .ge. 0.0d0) then
-                SW_c( row, col ) = ( 1.0d0 - IMP( row, col, j ) ) *& 
-                    ( SW_sat - SW_in )
+                SW_c( row, col ) = ( 1.0d0 - IMP_m( row, col ) ) * ( SW_sat - SW_in )
             else
-                SW_c( row, col ) = SW_sat - SW_in
+                SW_c( row, col ) =  SW_sat - SW_in 
             end if
 
             ! Runoff per unit area from the element 
@@ -299,7 +360,7 @@ do j = 1, days
             SW_t = dmax1( 0.0d0, SW - SW_fc )
 
             if ( SW_t .gt. 0.0d0 ) then
-                IF_out( row, col ) = dmin1( K( row, col ) * dsin( S ) *& 
+                IF_out( row, col ) = dmin1( K_m( row, col ) * dsin( S ) *& 
                     SW_t * W, SW_t * A( row, col ) )
             else
                 IF_out( row, col ) = 0.0d0
@@ -325,22 +386,22 @@ do j = 1, days
         ! Begin sediment loss calculation module
         ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             ! The ratiao of Erosion Protected Area ( EPA )
-            EPA = IMP( row, col, j ) +& 
-                ( 1.0d0 - IMP( row, col, j ) ) * GC( row, col, j )
+            EPA = IMP_m( row, col ) +& 
+                ( 1.0d0 - IMP_m( row, col ) ) * GC_m( row, col )
             ! Detachment of soil particles by raindrop impact ( kg/m^2 )
             F_t = 0.001d0 * dmax1( 0.0d0, ( 1.0d0 - EPA ) ) *& 
                 KE( RI_0( row, col ), R_Type, Rf( row, col ),&
-                CC( row, col, j ), PH( row, col, j ) )
-            F_c = DK_c( row, col ) * P_c( row, col ) * F_t
-            F_z = DK_z( row, col ) * P_z( row, col ) * F_t
-            F_s = DK_s( row, col ) * P_s( row, col ) * F_t
+                CC_m( row, col ), PH_m( row, col ) )
+            F_c = DK_c_m( row, col ) * P_c_m( row, col ) * F_t
+            F_z = DK_z_m( row, col ) * P_z_m( row, col ) * F_t
+            F_s = DK_s_m( row, col ) * P_s_m( row, col ) * F_t
 
             ! Detachment of soil particles by surface runoff ( kg/m^2 )
             H_t = 0.001d0 * ( Q**1.5d0 ) * ( dsin( S )**0.3d0 ) *&
                 dmax1( 0.0d0, ( 1.0d0 - EPA ) )  
-            H_c  = DR_c( row, col ) * P_c( row, col ) * H_t
-            H_z  = DR_z( row, col ) * P_z( row, col ) * H_t
-            H_s  = DR_s( row, col ) * P_s( row, col ) * H_t
+            H_c  = DR_c_m( row, col ) * P_c_m( row, col ) * H_t
+            H_z  = DR_z_m( row, col ) * P_z_m( row, col ) * H_t
+            H_s  = DR_s_m( row, col ) * P_s_m( row, col ) * H_t
 
             ! Influx of detached soil particles from adjacent elements ( kg/m^2 ).
             SL_c_in_u = SL_c_in( row, col ) / A( row, col )
@@ -357,21 +418,21 @@ do j = 1, days
             v_b = ( d_b ** 0.67d0 ) * dsqrt( dtan( S ) ) / n_b
             ! n' for flow velocity (n_t), n_s is the Manning's coefficients for
             ! surface condition.
-            n_t = dsqrt( ( n_s( row, col, j ) * n_s( row, col, j ) ) +&
-                ( 0.5d0 * D( row, col, j ) * NV( row, col, j ) *&
-                ( d_a( row, col, j ) ** ( 4.0d0 / 3.0d0 ) ) ) / g )  
+            n_t = dsqrt( ( n_s_m( row, col ) * n_s_m( row, col ) ) +&
+                ( 0.5d0 * D_m( row, col ) * NV_m( row, col ) *&
+                ( d_a_m( row, col ) ** ( 4.0d0 / 3.0d0 ) ) ) / g )  
             ! Flow velocity
-            v = ( ( d_a( row, col, j ) ** ( 2.0d0 / 3.0d0 ) ) *&
+            v = ( ( d_a_m( row, col ) ** ( 2.0d0 / 3.0d0 ) ) *&
                 dsqrt( dtan( S ) ) ) / n_t
             
             ! Particle fall velocities (vs_x) and particle fall number (Nf_x)
             if ( v .gt. 0.0d0 ) then 
                 vs_c = di_c * di_c * ( rho_s - rho ) * g / ( 18.0d0 * eta )
-                Nf_c = vs_c * L( i ) / ( v * d_a( row, col, j ) )
+                Nf_c = vs_c * L( i ) / ( v * d_a_m( row, col ) )
                 vs_z = di_z * di_z * ( rho_s - rho ) * g / ( 18.0d0 * eta )
-                Nf_z = vs_z * L( i ) / ( v * d_a( row, col, j ) )
+                Nf_z = vs_z * L( i ) / ( v * d_a_m( row, col ) )
                 vs_s = di_s * di_s * ( rho_s - rho ) * g / ( 18.0d0 * eta )
-                Nf_s = vs_s * L( i ) / ( v * d_a( row, col, j ) )
+                Nf_s = vs_s * L( i ) / ( v * d_a_m( row, col ) )
 
                 ! Percentage of detached particles that is deposited ( DEP_x ) (%)
                 DEP_c = dmin1( ( 0.441d0 * ( Nf_c**0.29d0 ) ), 1.0d0 )
@@ -398,9 +459,9 @@ do j = 1, days
             ! Transport capacity of the runoff ( kg/m^2 )
             TC( row, col ) = 0.001d0 * C * Q * Q *&
                 dsin( S )
-            TC_c = P_c( row, col ) * TC( row, col )
-            TC_z = P_z( row, col ) * TC( row, col )
-            TC_s = P_s( row, col ) * TC( row, col )
+            TC_c = P_c_m( row, col ) * TC( row, col )
+            TC_z = P_z_m( row, col ) * TC( row, col )
+            TC_s = P_s_m( row, col ) * TC( row, col )
 
             ! Sediment balance
             if ( TC_c .ge. G_c( row, col ) ) then
@@ -442,7 +503,7 @@ do j = 1, days
     ! 2. Soil water infiltration capacity
     SW_c_r( 1:nr, 1:nc, t ) = SW_c_r(1:nr, 1:nc, t ) + SW_c( 1:nr, 1:nc )
     ! 3. Remained soil water content
-    theta_r_r( 1:nr, 1:nc, t ) = SWr_d / SD / 1000.0d0  
+    theta_r_r( 1:nr, 1:nc, t ) = SWr_d / SD_m / 1000.0d0  
     ! 4. Accumulated transport capacity of surface runoff
     TC_r( 1:nr, 1:nc, t ) = TC_r( 1:nr, 1:nc, t ) + TC( 1:nr, 1:nc )
     ! 5. Total inflow of surface runoff
@@ -482,7 +543,12 @@ do j = 1, days
 
     if ( Init_point( j+1 ) .gt. 0.0d0 ) then
         init_counter = init_counter + 1
-        SW_init = 1000.0d0 * theta_init( 1:nr, 1:nc, init_counter ) * SD
+        do i = 1, 6 
+            where( IDNINT(SoilMap) .eq. i ) 
+                theta_init_m = theta_init(i, init_counter)
+            end where
+        end do
+        SW_init = 1000.0d0 * theta_init_m * SD_m
     else
         ! Daily update of remaining soil water 
         ! Remaining soil water is the last value of the event
@@ -493,4 +559,4 @@ end do
 ! 13. Total sediment inputs and outputs of all sediment particle size classes
 SL_in_r = SL_c_in_r + SL_z_in_r + SL_s_in_r
 SL_out_r = SL_c_out_r + SL_z_out_r + SL_s_out_r
-end subroutine DMMF
+end subroutine DMMFc

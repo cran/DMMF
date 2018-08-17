@@ -4,7 +4,7 @@ MapChecker <-
         if ( missing( DEM ) || !is( DEM, "RasterLayer" ) )
         { 
             stop("Invalid type of DEM") 
-        }else if ( xres( DEM ) == yres( DEM ) ) 
+        }else if ( all.equal( xres( DEM ), yres( DEM ) ) ) 
         {
             # Extract basic infomation of a DEM
             res     <- xres( DEM )

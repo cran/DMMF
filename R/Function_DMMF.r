@@ -7,7 +7,7 @@ DMMF <-
 {
         # Input variable check
         # 1. DEM check
-        if ( is( DEM, "RasterLayer" ) & ( xres( DEM ) == yres( DEM ) ) ){
+        if ( is( DEM, "RasterLayer" ) & ( all.equal(xres( DEM ), yres( DEM ) ) ) ){
             # Extract basic infomation of a DEM
             res     <- xres( DEM )
             xmn     <- extent(DEM)[1]
