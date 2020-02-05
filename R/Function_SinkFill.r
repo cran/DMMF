@@ -29,7 +29,6 @@ SinkFill <-
             Boundary_m <- Boundary_list$boundary 
             Boundary <- raster(Boundary_m, xmn = xmn, xmx = xmx, ymn = ymn, ymx = ymx, crs = crs)
         }
-        Boundary[is.na(Boundary)] <- -999999 
         Boundary_m   <- as.matrix( Boundary )
 
         # Run SinkFill module

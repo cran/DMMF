@@ -50,7 +50,8 @@ Maintainer: Kwanghun Choi (\email{kwanghun.choi@yahoo.com})
     A predictive model for the assessment of soil erosion risk. \emph{Journal of Agricultural Engineering Research}, 30(0):245--253.
 
 }
-\keyword{Soil erosion, surface runoff, Hydrology, MMF, DMMF, Hillslope}
+\keyword{Soil erosion}
+
 \seealso{
     \code{\link{DMMF}} to run the DMMF model, 
     \code{\link{DMMF_Simple}} to run the DMMF model for simple one element during a day,

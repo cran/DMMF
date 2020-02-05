@@ -1,5 +1,14 @@
 ## News for Package `DMMF`
 
+#### Changes in DMMF version 0.5.1.0
+- Adopt `ieee_arithmetic` for NaN value
+
+#### Changes in DMMF version 0.5.0.4
+- Change NaN value from NaN to -999999 in Fortran code.
+
+#### Changes in DMMF version 0.5.0.3
+- Minor update to debug compile errors by modifying `DMMF.h` and `R_init_DMMF.c` (remove lines related to all Fortran functions in both files).
+
 #### Changes in DMMF version 0.5.0.2
 - Modifying SinkFill algorithm to give correct results.
 

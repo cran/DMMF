@@ -10,6 +10,9 @@ subroutine DMMF( DEM, nr, nc, res, option, days, R, RI, R_Type, ET,&
         SL_c_out_r, SL_z_out_r, SL_s_out_r, SL_out_r )
 ! This is the program to run corrected Morgan-Morgan-Finney model
 ! suggested by Choi et al. (2015)
+    ! use external module to use nan.
+    !use, intrinsic::iso_fortran_env
+    !use, intrinsic::ieee_arithmetic
     implicit none
     ! Interface of the functions.
     interface
@@ -148,9 +151,9 @@ subroutine DMMF( DEM, nr, nc, res, option, days, R, RI, R_Type, ET,&
     double precision, parameter :: rho_s = 2650.0d0, rho = 1000.0d0,&
         eta = 0.0015d0, di_c = 0.000002d0, di_z = 0.00006d0, di_s = 0.0002d0 
     ! These are the dummy variables for calculation.
-    ! mask: logical matrix for maxloc function to apply algorithm from highest
+    ! msk: logical matrix for maxloc function to apply algorithm from highest
     ! altitude to the lowest.
-    integer, dimension( nr, nc ) :: mask
+    integer, dimension( nr, nc ) :: msk
     ! b_DEM: DEM matrix with buffers.
     double precision, dimension( 0:( nr + 1 ), 0:( nc + 1 ) ) :: b_DEM
     ! m_block: sliced matrix of 3 X 3 from DEM matrix.
@@ -164,7 +167,7 @@ subroutine DMMF( DEM, nr, nc, res, option, days, R, RI, R_Type, ET,&
     ! i: dummy variable for the loop.
     integer :: i, j, t, init_counter
     ! Parameters
-    double precision, parameter :: NaN = transfer(z'7ff8000000000000', 1.0d0)
+    double precision :: zero, NaN 
     double precision, parameter :: pi = 3.141592653589793239d0
     double precision, parameter :: g = 9.80665d0
     ! Input of initial soil water content of whole soil profile
@@ -180,10 +183,14 @@ subroutine DMMF( DEM, nr, nc, res, option, days, R, RI, R_Type, ET,&
     double precision, dimension( vc ) :: slp, L
     double precision, dimension( 3, 3, vc ) :: weight_m
 
+    zero = 0.d0
+    NaN = 0.d0/zero
+    !NaN = ieee_value(NaN, ieee_quiet_nan)
+
 where( DEM .lt. -99999 ) DEM = NaN
 where( sinks .lt. -99999 ) sinks = NaN
 where( sinks .ge. -99999 ) sinks = 1.0d0
-mask = 1
+msk = 1
 
 ! Initialize b_DEM using DEM and make buffers as NaN.
 b_DEM = NaN; b_DEM( 1:nr, 1:nc ) = DEM
@@ -193,12 +200,15 @@ b_DEM = NaN; b_DEM( 1:nr, 1:nc ) = DEM
 A = NaN; W = res
 do i = 1, vc
     max_loc = maxloc( DEM,& 
+        !mask = ( ( .not. ieee_is_nan( DEM ) )&
+        !.and. ( ieee_is_nan( sinks ) ) &
+        !.and. ( msk .eq. 1 ) ) )
         mask = ( ( DEM .eq. DEM )&
         .and. ( sinks .ne. sinks ) &
-        .and. ( mask .eq. 1 ) ) )
+        .and. ( msk .eq. 1 ) ) )
     row = max_loc( 1 ); col = max_loc( 2 )
     row_s( i ) = row; col_s( i ) = col
-    mask( row, col ) = 0
+    msk( row, col ) = 0
     ! m_block is the 3 X 3 sliced matrix around the element. 
     m_block = b_DEM( ( row - 1 ):( row + 1 ), ( col - 1 ):( col + 1 ) )
     ! m_weight is the 3 X 3 weight matrix for runoff and sediment

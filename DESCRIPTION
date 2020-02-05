@@ -1,8 +1,8 @@
 Package: DMMF
 Type: Package
 Title: Daily Based Morgan-Morgan-Finney (DMMF) Soil Erosion Model
-Version: 0.5.0.2
-Date: 2018-08-16
+Version: 0.5.1.1
+Date: 2020-02-01
 Authors@R: c(person("Kwanghun", "Choi", role = c("aut", "cre"), email="kwanghun.choi@yahoo.com"), person("Sebastian", "Arnhold", role = c("dtc", "ctb")), person("Bjoern", "Reineking", role = c("ths", "ctb")))
 Author: Kwanghun Choi [aut, cre],
   Sebastian Arnhold [dtc, ctb],
@@ -12,6 +12,6 @@ Description: Implements the daily based Morgan-Morgan-Finney (DMMF) soil erosion
 License: GPL (>= 2)
 Depends: R (>= 3.2.3), raster, sp, rgdal, methods
 NeedsCompilation: yes
-Packaged: 2018-08-17 06:29:23 UTC; kwanghun
+Packaged: 2020-02-04 03:48:41 UTC; kwanghun
 Repository: CRAN
-Date/Publication: 2018-08-17 07:20:02 UTC
+Date/Publication: 2020-02-06 00:30:05 UTC

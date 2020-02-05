@@ -6,13 +6,13 @@
     Example input data for running the \code{\link{DMMF}} function. This data is based on the field data from the convex potato field described in Arnhold et al. (2013) with optimized parameters described in Choi et al. (2017).
 }   
 \usage{
-Potato.Convex
+data(Potato.Convex)
 }
 \value{
     \code{Potato.Convex} contains input data for the \code{\link{DMMF}} including map type and numeric type variables. Static variables are fixed and do not change with time (or period). Dynamic variables change with time (or period).\cr
     \code{s.map}: Static input maps for the \code{\link{DMMF}} model.\cr
     \itemize{
-        \item \code{DEM.original}: RasterLayer object of original digital elevation model (DEM) of the convex potato field before filling sinks.
+        \item \code{DEM_original}: RasterLayer object of original digital elevation model (DEM) of the convex potato field before filling sinks.
         \item \code{DEM}: RasterLayer object of DEM after applying sinkfill algorithm.
         \item \code{IMP}: RasterLayer object of the proportion of area covered with impervious surface cover.
         \item \code{n_s}: RasterLayer object of the Manning's roughness coefficient of the soil surface.

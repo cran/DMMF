@@ -9,6 +9,10 @@ subroutine sinkfill(DEM, nr, nc, res, boundary, min_angle, DEM_nosink, partition
     ! [2] Volker Wichmann (2007) Module Fill Sinks (Wang & Liu). SAGA-GIS Module 
     ! Library Documentation (v2.1.3) [ cited 2015. 08. 15 ], Available from:
     ! http://www.saga-gis.org/saga_module_doc/2.1.3/ta_preprocessor_4.html
+    
+    ! use external module to use nan.
+    !use, intrinsic::iso_fortran_env
+    !use, intrinsic::ieee_arithmetic
     implicit none
     ! The "nr", and the "nc" are the number of row and column of the DEM.
     integer, intent(in) :: nr, nc
@@ -25,13 +29,17 @@ subroutine sinkfill(DEM, nr, nc, res, boundary, min_angle, DEM_nosink, partition
     double precision, dimension( -1:1, -1:1 ) :: min_diff, min_block
     double precision, dimension( -1:1, -1:1 ) :: bnd_block, prt_block, DEM_block, out_block
     ! Dummy variables and the minimum and maximum row and column number.
-    integer :: j, k, r, c, mnr, mxr, mnc, mxc, t, r_t, c_t 
-    double precision :: mda, mdd, grad, grad_max
+    integer :: r, c, mnr, mxr, mnc, mxc, t
+    double precision :: mda, mdd
     ! Variables of locations for maximum value and minumum value.
     integer, dimension(2) :: min_loc
     ! Parameters for the NaN value.
-    double precision, parameter ::&
-        NaN = transfer(z'7ff8000000000000', 1.0d0)
+    double precision :: zero, NaN
+    !    NaN = transfer(z'7ff8000000000000', 1.0d0)
+
+    zero = 0.d0
+    NaN = 0.d0 / zero
+    !NaN = ieee_value(NaN, ieee_quiet_nan)
 
     where( DEM .lt. -99999 ) DEM = NaN
     DEM_t = DEM; DEM_nosink = DEM
@@ -68,9 +76,15 @@ subroutine sinkfill(DEM, nr, nc, res, boundary, min_angle, DEM_nosink, partition
         min_block( (mnr-r):(mxr-r), (mnc-c):(mxc-c) ) = &
             DEM_t( r, c ) + min_diff( (mnr-r):(mxr-r), (mnc-c):(mxc-c) )
         ! Assign new boundary and perform sink fill algorithm
+        !where( ( ( .not. ieee_is_nan(DEM_block ) ) .and. ieee_is_nan( bnd_block ) )&
+        !        .and. (DEM_block .le. min_block) ) DEM_block = min_block
         where( (DEM_block .eq. DEM_block) .and. (DEM_block .le. min_block)&
                 .and. (bnd_block .ne. bnd_block) ) DEM_block = min_block
-        where( prt_block .ne. prt_block ) prt_block = partition( r, c )
+        !where( ( ieee_is_nan( prt_block ) .and. ieee_is_nan( bnd_block) ) &
+        !        .and. (.not. ieee_is_nan( out_block ) ) ) prt_block = partition( r, c )
+        where( (prt_block .ne. prt_block) .and. (out_block .eq. out_block)&
+                .and. (bnd_block .ne. bnd_block) ) prt_block = partition( r, c )
+        !where( .not. ieee_is_nan( DEM_block ) )
         where( DEM_block .eq. DEM_block ) 
             bnd_block = 1.0d0
             out_block = DEM_block
