@@ -37,7 +37,7 @@ subroutine checkboundary(DEM, nr, nc, boundary)
             !if ( ( .not. ieee_is_nan( buffer( i, j ) ) ) .and. &
             !    ( count( ieee_is_nan( buffer( i-1:i+1, j-1:j+1 ) ) ) .gt. 0 ) ) then
             if ( ( buffer( i, j ) .eq. buffer( i, j ) ) .and. &
-                ( count( buffer_m3 .eq. buffer_m3 ) .gt. 0 ) ) then
+                ( count( buffer_m3 .ne. buffer_m3 ) .gt. 0 ) ) then
                 boundary(i, j) = 1.0d0
             else
                 boundary(i, j) = NaN

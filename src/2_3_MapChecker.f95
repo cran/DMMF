@@ -34,7 +34,7 @@ subroutine mapchecker(DEM, nr, nc, boundary, sink, stand)
     !forall (i=1:nr, j=1:nc, ( .not. ieee_is_nan( DEM_b( i, j ) ) ) )
     forall (i=1:nr, j=1:nc, DEM_b( i, j ) .eq. DEM_b( i, j ) )
         boundary(i, j) =&
-            dble( count( DEM_b( i-1:i+1, j-1:j+1 ) .eq.&
+            dble( count( DEM_b( i-1:i+1, j-1:j+1 ) .ne.&
             DEM_b( i-1:i+1, j-1:j+1 ) ) )
         stand(i, j) =&
             dble( count( DEM_b(i-1:i+1, j-1:j+1) .lt. DEM(i, j) ) )

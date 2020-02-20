@@ -1,6 +1,6 @@
-b8f820e4d4b5d4fce91a90bd9d9a4a14 *DESCRIPTION
+4f5037bfe48a7b73bbcac931cfa186a7 *DESCRIPTION
 6aafedd9aca4981cb37a48d733ef501d *NAMESPACE
-a3eb312dd5fab562a3b5fce9d9eaaa6c *NEWS.md
+616b06ff182251368717b7fb1fb19a2a *NEWS.md
 8c7acef58b30fa5c315a6d7882d8d500 *R/Function_DMMF.r
 89e3a514a3ff5cff9bcf6d0079111492 *R/Function_DMMF_Simple.r
 7d64e7dcec212d0e2bb495231e5e7934 *R/Function_DMMFc.r
@@ -24,8 +24,8 @@ aaa03939b9c50a319c776d56884bea14 *man/Potato.Concave.Rd
 0846e9fdd2b6a276b8d2e37268a9a955 *src/1_3_MDinfAlg.f95
 4b235ceee0e2abdb962ab86a3a403db0 *src/1_4_slpAlg.f95
 59a06d48e040840aa7d9e5e6479f4c06 *src/1_5_MMFcAlg_d.f95
-cc71771374e5d5473b3d10b9cc851470 *src/2_1_SinkFillAlg.f95
-44c3c6dbcb29389400fae011db48f35f *src/2_2_BoundaryChecker.f95
-6d4e16a80017621cad62cb3211349a50 *src/2_3_MapChecker.f95
+89eb92ec867e121e15a012b7bc377529 *src/2_1_SinkFillAlg.f95
+1bc3d496219b9a0cf54b694139c35809 *src/2_2_BoundaryChecker.f95
+3ba9fa14c1041d7c70245936aeb3ed49 *src/2_3_MapChecker.f95
 5c2a1b39576bbb49e00ee2696266a832 *src/DMMF.h
 cee5834f1a8670233b23046c15ff0e0a *src/R_init_DMMF.c

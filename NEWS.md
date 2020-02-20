@@ -1,5 +1,11 @@
 ## News for Package `DMMF`
 
+#### Changes in DMMF version 0.5.1.2
+- Bug fix for Sinkfill algorithm
+
+#### Changes in DMMF version 0.5.1.1
+- Adopt (x=0.0d0 and NaN = 0.0d0/x) for NaN value
+
 #### Changes in DMMF version 0.5.1.0
 - Adopt `ieee_arithmetic` for NaN value
 
