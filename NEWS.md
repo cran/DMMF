@@ -1,5 +1,8 @@
 ## News for Package `DMMF`
 
+#### Changes in DMMF version 0.5.2.0
+- Remove dependencies of retiring packages (rgdal, rgeos, maptools) 
+
 #### Changes in DMMF version 0.5.1.2
 - Bug fix for Sinkfill algorithm
 
